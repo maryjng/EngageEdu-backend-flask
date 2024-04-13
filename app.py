@@ -43,8 +43,32 @@ def index():
 
 @app.route("/login", methods=["POST"])
 def login():
+    try:
+        data = request.json
 
-    return 
+        resp = Users.authenticate(
+            email = data["email"],
+            password = data["password"]
+        )
+
+        if resp:
+            response_data = {
+            "user_id": resp.user_id,
+            "username": resp.username,
+            "email": resp.email,
+            "type": resp.type
+            }
+               
+            return jsonify(response_data), 200
+        
+        else:
+            response_data = {"message": "Invalid user or password."}
+            return jsonify(response_data), 401  # Unauthorized status code
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
 
 
 @app.route("/register", methods=["POST"])

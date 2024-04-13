@@ -12,7 +12,7 @@ class Users(db.Model):
 
     user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
+    email = db.Column(db.String(100), nullable=False, unique=True) #LOG IN WITH EMAIL AND PASSWORD (username not unique)
     password = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(20), nullable=False)
 
@@ -28,13 +28,13 @@ class Users(db.Model):
 
 
     @classmethod
-    def authenticate(cls, username, password):
-        """Find user with `username` and `password`. searches for a user whose password hash matches this password
-        and, if it finds such a user, returns that user object.
-        If can't find matching user (or if password is wrong), returns False.
+    def authenticate(cls, email, password):
+        """Find user with `email` and `password`. searches for an email whose password hash matches this password
+        and, if it finds such an email, returns that email object.
+        If can't find matching email (or if password is wrong), returns False.
         """
 
-        user = cls.query.filter_by(username=username).first()
+        user = cls.query.filter_by(email=email).first()
 
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
