@@ -92,6 +92,18 @@ class Sections(db.Model):
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'), nullable=False)
     course = db.relationship('Courses', backref='sections')
 
+    @classmethod
+    def add_section(cls, section_name, course_id):
+        #view already calls Course.get_course() to check if course exists
+        section = Sections(section_name=section_name, course_id=course_id)
+        db.session.add(section)
+
+        return section
+    
+    # @classmethod
+    # def delete_section(cls, section_name, course_id):
+
+
 
 class Modules(db.Model):
     __tablename__ = "modules"
