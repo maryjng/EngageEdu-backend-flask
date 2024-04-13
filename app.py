@@ -144,6 +144,29 @@ def add_course():
         return jsonify(response_data), 500
 
 
+@app.route("/course/<course_id>", methods=["PATCH"])
+def edit_course(course_id):
+    """ Queries db for course by id. Changes given fields and commits back to db. Errors if course does not exist. Returns the edited course info if successful."""
+    try:
+        data = request.json
+        course = Courses.query.get_or_404(course_id)
+
+        if data["course_id"]: #make sure course_id cannot be changed
+            raise Exception("Cannot change course ID.")
+
+        for key, value in data.items():
+            setattr(course, key, value)
+
+        db.session.commit()
+        return jsonify({"message": "Course updated successfully"}), 200
+    
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+
 @app.route("/course/<course_id>", methods=["DELETE"])
 def delete_course(course_id):
     """ Returns True if course was deleted. False if not. """
@@ -160,7 +183,6 @@ def delete_course(course_id):
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500        
-
 
 ##
 ## PROF SECTION VIEWS ##
