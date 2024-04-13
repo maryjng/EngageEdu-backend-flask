@@ -52,6 +52,37 @@ class Courses(db.Model):
     professor_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     professor = db.relationship('Users', backref='courses')
 
+    @classmethod
+    def add_course(cls, course_name, professor_id):
+        """ First checks if a course by course_name and professor_id exists. If yes, return False. If not, create new course and
+        commit to db, then return the new course object.
+        """
+        course = cls.query.filter_by(course_name=course_name, professor_id=professor_id).one_or_none()
+        if course:
+            return False
+        new_course = Courses(course_name=course_name, professor_id=professor_id)
+        db.session.add(new_course)
+
+        return new_course
+
+    @classmethod
+    def get_course(cls, course_id):
+        """ Returns the queried course if exists. Otherwise returns False. """
+        course = cls.query.filter_by(course_id=course_id).first()
+        if course:
+            return course
+        return False
+    
+    @classmethod
+    def delete_course(cls, course_id):
+        """ Returns True on successful deletion. False otherwise. """
+        course = cls.query.filter_by(course_id=course_id).first()
+        if course:
+            db.session.delete(course)
+            db.session.commit()
+            return True
+        return False 
+
 
 class Sections(db.Model):
     __tablename__ = "sections"

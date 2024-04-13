@@ -77,14 +77,13 @@ def register():
         data = request.json
 
         resp = Users.signup(
-        username = data["username"],
-        email = data["email"],
-        password = data["password"],
-        type = data["type"]
+            username = data["username"],
+            email = data["email"],
+            password = data["password"],
+            type = data["type"]
         )
 
         db.session.commit()
-        response_data = resp
 
         response_data = {
             "user_id": resp.user_id,
@@ -95,11 +94,93 @@ def register():
 
         return jsonify(response_data), 200
 
-    except IntegrityError as e:
-        response_data = {"message", e}
-        return response_data, 500
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
 
-    
+####################### 
+## PROF COURSE VIEWS ##
+
+@app.route("/course/<course_id>", methods=["GET"])
+def get_course(course_id):
+    try:
+        resp = Courses.get_course(course_id)
+        if resp:
+            response_data = {
+                "course_id": resp.course_id,
+                "course_name": resp.course_name,
+                "professor_id": resp.professor_id
+            }
+        return jsonify(response_data), 200
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course", methods=["POST"])
+def add_course():
+    try:
+        data = request.json
+        resp = Courses.add_course(
+            course_name = data["course_name"],
+            professor_id = data["professor_id"]
+        )
+
+        db.session.commit()
+
+        response_data = {
+            "course_id": resp.course_id,
+            "course_name": resp.course_name,
+            "professor_id": resp.professor_id,
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>", methods=["DELETE"])
+def delete_course(course_id):
+    """ Returns True if course was deleted. False if not. """
+    try:
+        resp = Courses.delete_course(course_id)
+        if resp:
+            response_data = {
+                "message": "success"
+            }
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500        
+
+
+##
+## PROF SECTION VIEWS ##
+
+# @app.route("/course/<ccourse_id>/section", methods=["POST"])
+# def add_section(ccourse_id):
+
+
+# @app.route("/course/<ccourse_id>/section/<section_id>", methods=["GET"])
+# def get_section(ccourse_id, section_id):
+
+##
+## PROF MODULE VIEWS ##
+
+
+##
+#######################
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
