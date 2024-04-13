@@ -105,16 +105,31 @@ def register():
 @app.route("/course/<course_id>", methods=["GET"])
 def get_course(course_id):
     """
-    Sample response:
-    {
-        "course_id": 1337,
-        "course_name": "DSA",
-        "professor_id": 7,
-        "sections": {
-            "1": "854"
+        Sample response:
+        {
+            "course_id": 1337,
+            "course_name": "DSA",
+            "course_description": "DSA",
+            "professor_id": 7,
+            "sections": [
+                {
+                    "section_id": "1",
+                    "section_name": "name",
+                    "section_description": "",
+                },
+                 {
+                    "section_id": "2",
+                    "section_name": "name 2",
+                    "section_description": "",
+                },
+                 {
+                    "section_id": "3",
+                    "section_name": "name 3",
+                    "section_description": "",
+                },
+            ]
         }
-    }
-"""
+    """
     try:
         resp = Courses.get_course(course_id)
         if resp:
@@ -124,13 +139,16 @@ def get_course(course_id):
                 "professor_id": resp.professor_id
             }
 
-            response_data["sections"] = {}
+            response_data["sections"] = []
             sections_res = db.session.query(Sections).filter_by(course_id=course_id).all()
 
-            for s in sections_res:
-                s_id = s.section_id
-                s_name = s.section_name
-                response_data["sections"][s_id] = s_name
+            for section in sections_res:
+                s = {}
+                s["section_id"] = section.section_id
+                s["section_name"] = section.section_name
+                # s["section_description"] = section.section_description
+                response_data["sections"].append(s)
+                
 
         return jsonify(response_data), 200
     
@@ -191,6 +209,7 @@ def edit_course(course_id):
 def delete_course(course_id):
     """ Returns True if course was deleted. False if not. """
     try:
+        response_data = {"message": "Course does not exist."}
         resp = Courses.delete_course(course_id)
         if resp:
             response_data = {
@@ -204,39 +223,116 @@ def delete_course(course_id):
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500        
 
-##
+##########################
 ## PROF SECTION VIEWS ##
 
-# @app.route("/course/<course_id>/section", methods=["POST"])
-# def add_section(course_id):
-#     try:
-#         data = request.json
+@app.route("/course/<course_id>/section/<section_id>", methods=["GET"])
+def get_section(course_id, section_id):
+    """
+    
+    """
+    try:
+        resp = db.session.query(Sections).filter_by(course_id=course_id, section_id=section_id).first()
+        if resp:
+            response_data = {
+                "section_id": resp.section_id,
+                "section_name": resp.section_id,
+                "course_id": resp.course_id,
+                "course_name": resp.course_name,
+                # "professor_id": resp.professor_id
+            }
 
-#         if Courses.get_course(course_id):
-#             resp = Sections.add_section(
-#                 course_id = course_id,
-#                 section_name = data["section_name"]
-#             )
+            response_data["modules"] = []
+            modules_res = db.session.query(Modules).filter_by(section_id=section_id).all()
 
-#             db.session.commit()
-
-#             response_data = {
-#                 "course_id": resp.course_id,
-#                 "section_id": resp.section_id,
-#                 "section_name": resp.section_name
-#             }
-
-#             return jsonify(response_data), 200
-
-#     except Exception as e:
-#         print("Exception:", e)
-#         response_data = {"message": "An error occurred."}
-#         return jsonify(response_data), 500
+            for module in modules_res:
+                m = {}
+                m["module_id"] = module.section_id
+                m["module_name"] = module.section_name
+                response_data["modules"].append(m)
+                
+        return jsonify(response_data), 200
+    
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
 
 
+@app.route("/course/<course_id>/section", methods=["POST"])
+def add_section(course_id):
+    """
+    data is expected to be { section_name }
+    returns { course_id, section_id, section_name } upon success
+    """
+    try:
+        data = request.json
 
-# @app.route("/course/<course_id>/section/<section_id>", methods=["GET"])
-# def get_section(course_id, section_id):
+        ##NOTE: section_name starting with 0 will cause an error
+        if Courses.get_course(course_id):
+            resp = Sections.add_section(
+                course_id = course_id,
+                section_name = data["section_name"]
+            )
+
+            db.session.commit()
+
+            response_data = {
+                "course_id": resp.course_id,
+                "section_id": resp.section_id,
+                "section_name": resp.section_name
+            }
+
+            return jsonify(response_data), 200
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>", methods=["PATCH"])
+def edit_section(course_id, section_id):
+    """
+    data is expected to be { section_name }
+    """
+    try:
+        data = request.json
+        section = db.session.query(Sections).filter_by(course_id=course_id, section_id=section_id).first()
+
+        #primary keys as keys are filtered out in front end to prevent their change
+        for key, value in data.items():
+            setattr(section, key, value)
+
+        db.session.commit()
+        return jsonify({"message": "Section updated successfully"}), 200
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+    
+
+@app.route("/course/<course_id>/section/<section_id>", methods=["DELETE"])
+def delete_section(course_id, section_id):
+    """
+    Returns success message upon success.
+    """
+
+    try:
+        resp = Sections.delete_section(course_id, section_id)
+        response_data = {"message": "Section does not exist."}
+        if resp:
+            response_data = {
+                "message": "success"
+            }
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500      
 
 ##
 ## PROF MODULE VIEWS ##

@@ -100,9 +100,15 @@ class Sections(db.Model):
 
         return section
     
-    # @classmethod
-    # def delete_section(cls, section_name, course_id):
-
+    @classmethod
+    def delete_section(cls, course_id, section_id):
+        """ Returns True on successful deletion. False otherwise. """
+        section = cls.query.filter_by(section_id=section_id, course_id=course_id).first()
+        if section:
+            db.session.delete(section)
+            db.session.commit()
+            return True
+        return False 
 
 
 class Modules(db.Model):
