@@ -214,6 +214,11 @@ class Questions(db.Model):
         questions = cls.query.filter_by(module_id=module_id).all()
         return questions
     
+    @classmethod
+    def get_question(cls, question_id):
+        question = cls.query.filter_by(question_id=question_id).first()
+        return question
+    
 
     @classmethod
     def add_question(cls, module_id, question_text, created_by):
@@ -225,7 +230,15 @@ class Questions(db.Model):
         db.session.add(question)
         return question
     
-
+    @classmethod
+    def delete_question(cls, course_id, section_id, module_id, question_id):
+        """ Returns True on successful deletion. False otherwise. """
+        question = cls.query.filter_by(module_id=module_id, question_id=question_id).first()
+        if question:
+            db.session.delete(question)
+            db.session.commit()
+            return True
+        return False 
 
 class Answers(db.Model):
     __tablename__ = "answers"

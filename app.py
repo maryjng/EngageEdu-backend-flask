@@ -637,7 +637,27 @@ def delete_content(course_id, section_id, module_id, content_id):
 #######################
 ## PROF QUESTIONS VIEWS
 
-# @app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question", methods=["GET"])
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>", methods=["GET"])
+def get_question(course_id, section_id, module_id, question_id):
+    """
+    Returns { question_id, module_id, question_text, created_by } for question_id
+    """
+    try:
+        question = Questions.get_question(question_id)
+        response_data = {
+            "question_id": question_id,
+            "module_id": question.module_id,
+            "question_text": question.question_text,
+            "created_by": question.created_by
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
 
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question", methods=["POST"])
 def add_question(course_id, section_id, module_id):
@@ -647,7 +667,7 @@ def add_question(course_id, section_id, module_id):
     """
     try:
         data = request.json
-        response_data = {"message": "Content not found"}
+        response_data = {"message": "Module not found"}
 
         resp = Questions.add_question(
             module_id=module_id, 
@@ -671,7 +691,51 @@ def add_question(course_id, section_id, module_id):
         return jsonify(response_data), 500
 
 
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>", methods=["PATCH"])
+def edit_question(course_id, section_id, module_id, question_id):
+    """
+    Expects data to at least have one of { question_text, created_by }
+    Returns success message upon change
+    """
+    try:
+        data = request.json
+        question = db.session.query(Questions).filter_by(module_id=module_id, question_id=question_id).first()
 
+        if question:
+            for key, value in data.items():
+                setattr(question, key, value)
+
+            db.session.commit()
+
+            return jsonify({"message": "Section updated successfully"}), 200
+        return jsonify({"message": "Content does not exist."}), 400
+    
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>", methods=["DELETE"])
+def delete_question(course_id, section_id, module_id, question_id):   
+    """
+    Returns success message upon deletion.
+    """
+    try:
+        resp = Questions.delete_question(course_id, section_id, module_id, question_id)
+        response_data = {"message": "Question does not exist."}
+        if resp:
+            response_data = {
+                "message": "success"
+            }
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500      
 
 ##
 #######################
