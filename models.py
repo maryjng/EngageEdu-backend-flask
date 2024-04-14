@@ -184,7 +184,16 @@ class ModuleContents(db.Model):
         db.session.add(content)
         return content
 
-
+    @classmethod
+    def delete_content(cls, course_id, section_id, module_id, content_id):
+        """ Returns True on successful deletion. False otherwise. """
+        content = cls.query.filter_by(module_id=module_id, content_id=content_id).first()
+        if content:
+            db.session.delete(content)
+            db.session.commit()
+            return True
+        return False 
+    
 
 class Questions(db.Model):
     __tablename__ = "questions"

@@ -527,7 +527,7 @@ def get_content(course_id, section_id, module_id, content_id):
 def add_content(course_id, section_id, module_id):
     """
     Expects data { video_name, video_description, youtube_embed_url }
-    Returns { module_id, video_name, video_description, youtube_embed_url }
+    Returns { content_id, video_name, video_description, youtube_embed_url }
     """
     try:
         data = request.json
@@ -536,14 +536,14 @@ def add_content(course_id, section_id, module_id):
         resp = ModuleContents.add_content(
             module_id=module_id, 
             video_name=data["video_name"], 
-            video_description=["video_description"], 
-            youtube_embed_url=["youtube_embed_url"]
+            video_description=data["video_description"], 
+            youtube_embed_url=data["youtube_embed_url"]
         )
 
         db.session.commit()
 
         response_data = {
-            "module_id": resp.module_id,
+            "content_id": resp.content_id,
             "video_name": resp.video_name,
             "video_description": resp.video_description,
             "youtube_embed_url": resp.youtube_embed_url
@@ -557,6 +557,51 @@ def add_content(course_id, section_id, module_id):
         return jsonify(response_data), 500
 
 
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/content/<content_id>", methods=["PATCH"])
+def edit_content(course_id, section_id, module_id, content_id):
+    """
+    Expects data to at least have one of { video_name, video_description, youtube_embed_url }
+    Returns success message upon change
+    """
+    try:
+        data = request.json
+        content = db.session.query(ModuleContents).filter_by(module_id=module_id, content_id=content_id).first()
+
+        if content:
+            for key, value in data.items():
+                setattr(content, key, value)
+
+            db.session.commit()
+
+            return jsonify({"message": "Section updated successfully"}), 200
+        return jsonify({"message": "Content does not exist."}), 400
+    
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/content/<content_id>", methods=["DELETE"])
+def delete_content(course_id, section_id, module_id, content_id):
+    """
+    Returns success message upon deletion.
+    """
+    try:
+        resp = ModuleContents.delete_content(course_id, section_id, module_id, content_id)
+        response_data = {"message": "Content does not exist."}
+        if resp:
+            response_data = {
+                "message": "success"
+            }
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500      
 ##
 #######################
 
