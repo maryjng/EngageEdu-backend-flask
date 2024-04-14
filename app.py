@@ -394,6 +394,22 @@ def delete_section(course_id, section_id):
 ###################################
 ## PROF MODULE VIEWS ##
 
+@app.route("/course/<course_id>/section/<section_id>/module", methods=["GET"])
+def get_modules(course_id, section_id):
+    modules = Modules.get_all_modules(section_id=section_id)
+    print(modules)
+    response_data = {"modules": []}
+
+    for module in modules:
+        m = {
+            "module_id": module.module_id,
+            "module_name": module.module_name,
+            "section_id": module.section_id
+        }
+        response_data["modules"].append(m)
+    
+    return jsonify(response_data), 200
+
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["GET"])
 def get_module(course_id, section_id, module_id):
     """
@@ -427,7 +443,7 @@ def get_module(course_id, section_id, module_id):
         resp = Modules.get_module(module_id)
         #NEED TO REPLACE PARAMS WHEN DB IS FIXED
         if resp:
-            data = ModuleContents.get_module_contents(module_id)
+            # data = ModuleContents.get_module_contents(module_id)
             
             response_data = {
                 "module_id": module_id,

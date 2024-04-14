@@ -142,6 +142,11 @@ class Modules(db.Model):
         if module:
             return module
         return False
+    
+    @classmethod
+    def get_all_modules(cls, section_id):
+        modules = cls.query.filter_by(section_id=section_id).all()
+        return modules
 
     @classmethod
     def add_module(cls, module_name, section_id):
