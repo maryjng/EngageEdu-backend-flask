@@ -53,6 +53,10 @@ class Courses(db.Model):
     description = db.Column(db.String(150), nullable=True)
     professor = db.relationship('Users', backref='courses')
 
+    @classmethod
+    def get_all_courses(cls, user_id):
+        courses = cls.query.filter_by(user_id=user_id).all()
+        return courses
 
     @classmethod
     def add_course(cls, course_name, user_id, description):
@@ -240,17 +244,28 @@ class Questions(db.Model):
             return True
         return False 
 
+
 class Answers(db.Model):
     __tablename__ = "answers"
 
     answer_id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
     question = db.relationship('Questions', backref='answers')
-    student_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     student = db.relationship('Users', backref='answers')
     answer_text = db.Column(db.Text, nullable=False)
     answered_at = db.Column(db.DateTime, nullable=False)
 
+    @classmethod
+    def get_all_answers(cls, course_id, section_id, module_id, question_id):
+        answers = cls.query.filter_by(question_id=question_id).all()
+        return answers
+    
+    @classmethod
+    def add_answer(cls, question_id, user_id, answer_text, answered_at):
+        answer = Answers(question_id=question_id, user_id=user_id, answer_text=answer_text, answered_at=answered_at)
+        db.session.add(answer)
+        return answer
 
 def connect_db(app):
     db.app = app

@@ -1,5 +1,6 @@
 import os
 import requests
+from datetime import datetime
 
 # from sqlalchemy import join, exc, and_
 # from sqlalchemy.sql import func
@@ -110,6 +111,24 @@ def register():
 
 ####################### 
 ## PROF COURSE VIEWS ##
+@app.route("/course", methods=["GET"])
+def get_all_courses():
+    user_id = request.args.get('user_id')
+    courses = Courses.get_all_courses(user_id)
+    response_data = {"courses": []}
+
+    for course in courses:
+        c = {
+            "course_id": course.course_id,
+            "course_name": course.course_name,
+            "user_id": course.user_id,
+            "description": course.description
+        }
+        response_data["courses"].append(c)
+
+    return jsonify(response_data), 200
+
+
 
 @app.route("/course/<course_id>", methods=["GET"])
 def get_course(course_id):
@@ -166,7 +185,7 @@ def get_course(course_id):
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500
-
+    
 
 @app.route("/course", methods=["POST"])
 def add_course():
@@ -640,15 +659,34 @@ def delete_content(course_id, section_id, module_id, content_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>", methods=["GET"])
 def get_question(course_id, section_id, module_id, question_id):
     """
-    Returns { question_id, module_id, question_text, created_by } for question_id
+    Returns { 
+        question_id, 
+        module_id, 
+        question_text, 
+        created_by,
+        "answers": [
+            {
+                "answer_id": answer_id,
+                "student_id": user_id,
+                "answer_text": answer_text,
+                "answered_at": answered_at
+            },
+            { ... }
+        ]
+    }
     """
     try:
         question = Questions.get_question(question_id)
+
+        answers = Answers.get_all_answers(course_id, section_id, module_id, question_id)
+        answer_dicts = [answer.to_dict() for answer in answers]
+
         response_data = {
             "question_id": question_id,
             "module_id": question.module_id,
             "question_text": question.question_text,
-            "created_by": question.created_by
+            "created_by": question.created_by,
+            "answers": answer_dicts
         }
 
         return jsonify(response_data), 200
@@ -736,6 +774,50 @@ def delete_question(course_id, section_id, module_id, question_id):
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500      
+
+
+########################
+## PROF ANSWERS VIEWS
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>/answer/<answer_id>", methods=["GET"])
+def get_answer(course_id, section_id, module_id, question_id, answer_id):
+    try:
+        pass
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+    
+    
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question/<question_id>/answer", methods=["POST"])
+def add_answer(course_id, section_id, module_id, question_id):
+    try:
+        data = request.json
+        response_data = {"message": "Question not found"}
+
+        resp = Answers.add_answer(
+            question_id=question_id, 
+            user_id=data["user_id"],
+            answer_text=data["answer_text"],
+            answered_at=datetime.now()
+            # answered_at=data["answered_at"]
+        )
+
+        db.session.commit()
+
+        response_data = {
+            "question_id": question_id,
+            "user_id": resp.user_id,
+            "answer_text": resp.answer_text,
+            "answered_at": resp.answered_at
+        }
+
+        return jsonify(response_data), 200
+            
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
 
 ##
 #######################
