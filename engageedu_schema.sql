@@ -27,7 +27,7 @@ SET default_table_access_method = heap;
 CREATE TABLE public.answers (
     answer_id integer NOT NULL,
     question_id integer NOT NULL,
-    student_id integer NOT NULL,
+    user_id integer NOT NULL,
     answer_text text NOT NULL,
     answered_at timestamp without time zone NOT NULL
 );
@@ -400,7 +400,7 @@ ALTER TABLE ONLY public.answers
 --
 
 ALTER TABLE ONLY public.answers
-    ADD CONSTRAINT answers_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT answers_student_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
 
 
 --
