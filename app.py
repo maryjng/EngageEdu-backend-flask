@@ -112,22 +112,22 @@ def get_course(course_id):
             "course_id": 1337,
             "course_name": "DSA",
             "description": "DSA",
-            "professor_id": 7,
+            "user_id": 7,
             "sections": [
                 {
                     "section_id": "1",
                     "section_name": "name",
-                    "section_description": "",
+                    "description": "",
                 },
                  {
                     "section_id": "2",
                     "section_name": "name 2",
-                    "section_description": "",
+                    "description": "",
                 },
                  {
                     "section_id": "3",
                     "section_name": "name 3",
-                    "section_description": "",
+                    "description": "",
                 },
             ]
         }
@@ -138,7 +138,7 @@ def get_course(course_id):
             response_data = {
                 "course_id": resp.course_id,
                 "course_name": resp.course_name,
-                "professor_id": resp.professor_id,
+                "user_id": resp.user_idd,
                 "description": resp.description
             }
 
@@ -149,7 +149,7 @@ def get_course(course_id):
                 s = {}
                 s["section_id"] = section.section_id
                 s["section_name"] = section.section_name
-                # s["section_description"] = section.section_description
+                s["description"] = section.description
                 response_data["sections"].append(s)
                 
 
@@ -164,14 +164,14 @@ def get_course(course_id):
 @app.route("/course", methods=["POST"])
 def add_course():
     """
-    Expects data to have { course_name, professor_id, description }
-    Returns { course_id, course_name, professor_id, description }
+    Expects data to have { course_name, user_id, description }
+    Returns { course_id, course_name, user_id, description }
     """
     try:
         data = request.json
         resp = Courses.add_course(
             course_name = data["course_name"],
-            professor_id = data["professor_id"],
+            user_id = data["user_id"],
             description = data["description"]
         )
 
@@ -180,7 +180,7 @@ def add_course():
         response_data = {
             "course_id": resp.course_id,
             "course_name": resp.course_name,
-            "professor_id": resp.professor_id,
+            "user_id": resp.user_id,
             "description": resp.description
         }
 
@@ -368,10 +368,7 @@ def delete_section(course_id, section_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["GET"])
 def get_module(course_id, section_id, module_id):
     """
-    SELECT * FROM module_contents
-    WHERE module_id=module_id;
-
-    Expects course_id, section_id, module_id
+    Expects { course_id, section_id, module_id }
     Returns {
         "module_id": module_id,
         "module_content": [
@@ -498,6 +495,57 @@ def delete_module(course_id, section_id, module_id):
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500      
+
+
+#############################
+## PROF MODULE_CONTENTS VIEWS
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/content/<content_id>", methods=["GET"])
+def get_content(course_id, section_id, module_id, content_id):
+    """
+    Expects { course_id, section_id, module_id, content_id }
+    Returns 
+    """
+
+    try:
+        pass
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/content", methods=["POST"])
+def add_content(course_id, section_id, module_id):
+    """
+    Expects data { video_name, video_description, youtube_embed_url }
+    Returns 
+    """
+    try:
+        data = request.json
+        response_data = {"message": "module not found"}
+
+        resp = ModuleContents.add_content(
+            module_id=module_id, 
+            video_name=data["video_name"], 
+            video_description=["video_description"], 
+            youtube_embed_url=["youtube_embed_url"]
+        )
+
+        db.session.commit()
+
+        response_data = {
+            "module_id": resp.module_id,
+            "video_name": resp.video_name,
+            "video_description": resp.video_description,
+            "youtube_embed_url": resp.youtube_embed_url
+        }
+
+        return jsonify(response_data), 200
+            
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
 
 
 ##

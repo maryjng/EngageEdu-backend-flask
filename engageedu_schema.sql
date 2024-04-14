@@ -64,7 +64,7 @@ ALTER SEQUENCE public.answers_answer_id_seq OWNED BY public.answers.answer_id;
 CREATE TABLE public.courses (
     course_id integer NOT NULL,
     course_name character varying(100) NOT NULL,
-    professor_id integer NOT NULL,
+    user_id integer NOT NULL,
     description character varying(150)
 );
 
@@ -324,122 +324,6 @@ ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.u
 
 
 --
--- Data for Name: answers; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.answers (answer_id, question_id, student_id, answer_text, answered_at) FROM stdin;
-\.
-
-
---
--- Data for Name: courses; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.courses (course_id, course_name, professor_id, description) FROM stdin;
-1337	DSA	7	\N
-5	Software architecture	7	\N
-\.
-
-
---
--- Data for Name: module_contents; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.module_contents (content_id, module_id, video_name, video_description, youtube_embed_url) FROM stdin;
-\.
-
-
---
--- Data for Name: modules; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.modules (module_id, module_name, section_id) FROM stdin;
-1	module	4
-2	module	4
-3	test moduleeee	4
-\.
-
-
---
--- Data for Name: questions; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.questions (question_id, module_id, question_text, created_by) FROM stdin;
-\.
-
-
---
--- Data for Name: sections; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.sections (section_id, section_name, course_id, description) FROM stdin;
-2	854	1337	\N
-3	5	1337	\N
-4	888	5	\N
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.users (user_id, username, email, password, type) FROM stdin;
-1	testuser	test@email.com	$2b$12$fb5eaX6MDnmQDv5K.eHB5ONftMtbHfCViG6eFnLY8t.4wZY1DEfe6	professor
-6	testuser	test1@email.com	$2b$12$gaCaTqyFlRZJCq4IHDNxvejRhacB2.YSMmYRvEbInmpDtgdypUra.	professor
-7	testuser	test2@email.com	$2b$12$nt3w/4j7BhGLy2kFqpIf4uSu5pSzHcVAPPEWmx/iyLlGC7pg/6MHG	professor
-\.
-
-
---
--- Name: answers_answer_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.answers_answer_id_seq', 1, false);
-
-
---
--- Name: courses_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.courses_course_id_seq', 5, true);
-
-
---
--- Name: module_contents_content_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.module_contents_content_id_seq', 1, false);
-
-
---
--- Name: modules_module_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.modules_module_id_seq', 4, true);
-
-
---
--- Name: questions_question_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.questions_question_id_seq', 1, false);
-
-
---
--- Name: sections_section_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.sections_section_id_seq', 4, true);
-
-
---
--- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.users_user_id_seq', 7, true);
-
-
---
 -- Name: answers answers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -524,7 +408,7 @@ ALTER TABLE ONLY public.answers
 --
 
 ALTER TABLE ONLY public.courses
-    ADD CONSTRAINT courses_professor_id_fkey FOREIGN KEY (professor_id) REFERENCES public.users(user_id);
+    ADD CONSTRAINT courses_professor_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id);
 
 
 --

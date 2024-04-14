@@ -49,20 +49,20 @@ class Courses(db.Model):
 
     course_id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100), nullable=False)
-    professor_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     description = db.Column(db.String(150), nullable=True)
     professor = db.relationship('Users', backref='courses')
 
 
     @classmethod
-    def add_course(cls, course_name, professor_id, description):
-        """ First checks if a course by course_name and professor_id exists. If yes, return False. If not, create new course and
+    def add_course(cls, course_name, user_id, description):
+        """ First checks if a course by course_name and user_id exists. If yes, return False. If not, create new course and
         commit to db, then return the new course object.
         """
-        course = cls.query.filter_by(course_name=course_name, professor_id=professor_id).one_or_none()
+        course = cls.query.filter_by(course_name=course_name, user_id=user_id).one_or_none()
         if course:
             return False
-        new_course = Courses(course_name=course_name, professor_id=professor_id, description=description)
+        new_course = Courses(course_name=course_name, user_id=user_id, description=description)
         db.session.add(new_course)
 
         return new_course
@@ -171,6 +171,19 @@ class ModuleContents(db.Model):
     def get_module_contents(cls, module_id):
         contents = cls.query.filter_by(module_id=module_id).all()
         return contents
+    
+
+    @classmethod
+    def add_content(cls, module_id, video_name, video_description, youtube_embed_url):
+        content = ModuleContents(
+            module_id=module_id, 
+            video_name=video_name, 
+            video_description=video_description, 
+            youtube_embed_url=youtube_embed_url
+            )
+        db.session.add(content)
+        return content
+
 
 
 class Questions(db.Model):
