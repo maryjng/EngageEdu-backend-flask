@@ -16,28 +16,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
---
--- Name: engageedu; Type: DATABASE; Schema: -; Owner: postgres
---
-
-CREATE DATABASE engageedu WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'en_US.UTF-8';
-
-
-ALTER DATABASE engageedu OWNER TO postgres;
-
-\connect engageedu
-
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -86,7 +64,8 @@ ALTER SEQUENCE public.answers_answer_id_seq OWNED BY public.answers.answer_id;
 CREATE TABLE public.courses (
     course_id integer NOT NULL,
     course_name character varying(100) NOT NULL,
-    professor_id integer NOT NULL
+    professor_id integer NOT NULL,
+    description character varying(150)
 );
 
 
@@ -229,7 +208,8 @@ ALTER SEQUENCE public.questions_question_id_seq OWNED BY public.questions.questi
 CREATE TABLE public.sections (
     section_id integer NOT NULL,
     section_name character varying(100) NOT NULL,
-    course_id integer NOT NULL
+    course_id integer NOT NULL,
+    description character varying(150)
 );
 
 
@@ -355,7 +335,9 @@ COPY public.answers (answer_id, question_id, student_id, answer_text, answered_a
 -- Data for Name: courses; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.courses (course_id, course_name, professor_id) FROM stdin;
+COPY public.courses (course_id, course_name, professor_id, description) FROM stdin;
+1337	DSA	7	\N
+5	Software architecture	7	\N
 \.
 
 
@@ -372,6 +354,9 @@ COPY public.module_contents (content_id, module_id, video_name, video_descriptio
 --
 
 COPY public.modules (module_id, module_name, section_id) FROM stdin;
+1	module	4
+2	module	4
+3	test moduleeee	4
 \.
 
 
@@ -387,7 +372,10 @@ COPY public.questions (question_id, module_id, question_text, created_by) FROM s
 -- Data for Name: sections; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.sections (section_id, section_name, course_id) FROM stdin;
+COPY public.sections (section_id, section_name, course_id, description) FROM stdin;
+2	854	1337	\N
+3	5	1337	\N
+4	888	5	\N
 \.
 
 
@@ -413,7 +401,7 @@ SELECT pg_catalog.setval('public.answers_answer_id_seq', 1, false);
 -- Name: courses_course_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.courses_course_id_seq', 1, false);
+SELECT pg_catalog.setval('public.courses_course_id_seq', 5, true);
 
 
 --
@@ -427,7 +415,7 @@ SELECT pg_catalog.setval('public.module_contents_content_id_seq', 1, false);
 -- Name: modules_module_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.modules_module_id_seq', 1, false);
+SELECT pg_catalog.setval('public.modules_module_id_seq', 4, true);
 
 
 --
@@ -441,7 +429,7 @@ SELECT pg_catalog.setval('public.questions_question_id_seq', 1, false);
 -- Name: sections_section_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.sections_section_id_seq', 1, false);
+SELECT pg_catalog.setval('public.sections_section_id_seq', 4, true);
 
 
 --

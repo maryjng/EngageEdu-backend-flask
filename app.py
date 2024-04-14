@@ -29,8 +29,8 @@ app.debug = True
 
 connect_db(app)
 
-with app.app_context():
-    db.create_all()
+# with app.app_context():
+#     db.create_all()
 
 ###################################
 
@@ -334,8 +334,164 @@ def delete_section(course_id, section_id):
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500      
 
-##
+
+###################################
 ## PROF MODULE VIEWS ##
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["GET"])
+def get_module(course_id, section_id, module_id):
+    """
+    Expects course_id, section_id, module_id
+    Returns {
+        "course_id": course_id,
+        "course_name": course_name,
+        "section_id": section_id,
+        "section_name": section_name,
+        "module_id": module_id,
+        "module_name": module_name,
+        "professor_id": professor_id,
+        "professor_name": professor_name,
+        "module_content": [
+            {
+                "content_id": content_id,
+                "video_name": video_name,
+                "video_description": video_description,
+                "youtube_embed_url": youtube_embed_url
+            },
+            {
+                ...
+            }
+        ]
+    }
+    """
+    try:
+        resp = Modules.get_module(module_id)
+        #NEED TO REPLACE PARAMS WHEN DB IS FIXED
+        if resp:
+            data = db.session.query(
+                Users.user_id, 
+                Users.username, 
+                Courses.course_id, 
+                Courses.course_name,
+                Sections.section_id,
+                Sections.section_name,
+                Modules.module_id,
+                Modules.module_name
+                )
+            
+            response_data = {
+                "course_id": data.course_id,
+                "course_name": data.course_name,
+                "section_id": data.section_id,
+                "section_name": data.section_name,
+                "module_id": data.module_id,
+                "module_name": data.module_name,
+                "professor_id": data.professor_id,
+                "professor_name": data.username,
+                "module_content": []
+            }
+
+            modules_res = db.session.query(ModuleContents).filter_by(module_id=module_id).all()
+
+            for module in modules_res:
+                m = {}
+                m["module_id"] = module.section_id
+                m["module_name"] = module.section_name
+                m["video_name"] = module.video_name
+                m["video_description"] = module.video_descsription
+                m["youtube_embed_url"] = module.youtube_embed_url
+
+                response_data["modules"].append(m)
+                
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module", methods=["POST"])
+def add_module(course_id, section_id):
+    """
+    Expects section_name
+    Returns { course_id, section_id, module_id, module_name } upon success
+    """
+    try:
+        data = request.json
+        response_data = {"message": "course or section id not found"}
+
+        if Sections.get_section(course_id, section_id):
+            #Get section given course and section ids
+            resp = Modules.add_module(
+                section_id = section_id,
+                module_name = data["module_name"]
+            )
+
+            db.session.commit()
+
+            response_data = {
+                "course_id": course_id,
+                "section_id": section_id,
+                "module_id": resp.module_id,
+                "module_name": resp.module_name
+            }
+
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["PATCH"])
+def edit_module(course_id, section_id, module_id):
+    """
+    Expects course_id, section_id, module_id
+    Returns success message upon successful update
+    """
+    try:
+        data = request.json
+        module = db.session.query(Modules).filter_by(module_id=module_id, section_id=section_id).first()
+
+        if module:
+            #primary keys as keys are filtered out in front end to prevent their change
+            for key, value in data.items():
+                setattr(module, key, value)
+
+            db.session.commit()
+
+            return jsonify({"message": "Section updated successfully"}), 200
+        return jsonify({"message": "Module or session does not exist."}), 400
+    
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["DELETE"])
+def delete_module(course_id, section_id, module_id):
+    """
+    Returns success message upon deletion.
+    """
+    try:
+        resp = Modules.delete_module(course_id, section_id, module_id)
+        response_data = {"message": "Module does not exist."}
+        if resp:
+            response_data = {
+                "message": "success"
+            }
+            return jsonify(response_data), 200
+        return jsonify(response_data), 400
+
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500      
 
 
 ##

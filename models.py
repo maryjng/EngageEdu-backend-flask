@@ -50,7 +50,9 @@ class Courses(db.Model):
     course_id = db.Column(db.Integer, primary_key=True)
     course_name = db.Column(db.String(100), nullable=False)
     professor_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    description = db.Column(db.String(150), nullable=True)
     professor = db.relationship('Users', backref='courses')
+
 
     @classmethod
     def add_course(cls, course_name, professor_id):
@@ -90,7 +92,16 @@ class Sections(db.Model):
     section_id = db.Column(db.Integer, primary_key=True)
     section_name = db.Column(db.String(100), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.course_id'), nullable=False)
+    description = db.Column(db.String(150), nullable=True)
+
     course = db.relationship('Courses', backref='sections')
+
+    @classmethod
+    def get_section(cls, course_id, section_id):
+        section = cls.query.filter_by(section_id=section_id, course_id=course_id).first()
+        if section:
+            return section
+        return False
 
     @classmethod
     def add_section(cls, section_name, course_id):
@@ -119,6 +130,34 @@ class Modules(db.Model):
     section_id = db.Column(db.Integer, db.ForeignKey('sections.section_id'), nullable=False)
     section = db.relationship('Sections', backref='modules')
 
+    @classmethod
+    def get_module(cls, module_id):
+        module = cls.query.filter_by(module_id=module_id)
+        #WHEN DB IS FIXED, REPLACE WITH JOIN STATEMENT
+        if module:
+            return module
+        return False
+
+    @classmethod
+    def add_module(cls, module_name, section_id):
+        module = Modules(module_name=module_name, section_id=section_id)
+        db.session.add(module)
+        return module
+    
+
+    @classmethod
+    def delete_module(cls, course_id, module_id, section_id):
+        """ Returns True on successful deletion. False otherwise. """
+        print(cls, course_id, module_id, section_id)
+        # module = cls.query.filter_by(module_id=module_id, section_id=section_id).first()
+        module = cls.query.filter_by(module_id=module_id).first()
+        print(module, "module")
+        if module:
+            db.session.delete(module)
+            db.session.commit()
+            return True
+        return False 
+    
 
 class ModuleContents(db.Model):
     __tablename__ = "module_contents"
