@@ -5,6 +5,7 @@ import requests
 # from sqlalchemy.sql import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 # from flask_debugtoolbar import DebugToolbarExtension
 # from key import API_KEY, SECRET_KEY, USERNAME, PASSWORD
 
@@ -17,6 +18,7 @@ PASSWORD="kitty"
 dbname="engageedu"
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f"postgresql://{USERNAME}:{PASSWORD}@localhost:5432/{dbname}")
 
@@ -109,7 +111,7 @@ def get_course(course_id):
         {
             "course_id": 1337,
             "course_name": "DSA",
-            "course_description": "DSA",
+            "description": "DSA",
             "professor_id": 7,
             "sections": [
                 {
@@ -136,7 +138,8 @@ def get_course(course_id):
             response_data = {
                 "course_id": resp.course_id,
                 "course_name": resp.course_name,
-                "professor_id": resp.professor_id
+                "professor_id": resp.professor_id,
+                "description": resp.description
             }
 
             response_data["sections"] = []
@@ -160,11 +163,16 @@ def get_course(course_id):
 
 @app.route("/course", methods=["POST"])
 def add_course():
+    """
+    Expects data to have { course_name, professor_id, description }
+    Returns { course_id, course_name, professor_id, description }
+    """
     try:
         data = request.json
         resp = Courses.add_course(
             course_name = data["course_name"],
-            professor_id = data["professor_id"]
+            professor_id = data["professor_id"],
+            description = data["description"]
         )
 
         db.session.commit()
@@ -173,6 +181,7 @@ def add_course():
             "course_id": resp.course_id,
             "course_name": resp.course_name,
             "professor_id": resp.professor_id,
+            "description": resp.description
         }
 
         return jsonify(response_data), 200
@@ -189,9 +198,6 @@ def edit_course(course_id):
     try:
         data = request.json
         course = Courses.query.get_or_404(course_id)
-
-        if data["course_id"]: #make sure course_id cannot be changed
-            raise Exception("Cannot change course ID.")
 
         for key, value in data.items():
             setattr(course, key, value)
@@ -229,26 +235,54 @@ def delete_course(course_id):
 @app.route("/course/<course_id>/section/<section_id>", methods=["GET"])
 def get_section(course_id, section_id):
     """
-    
+    Returns example: 
+        {
+        "course_id": 5,
+        "description": "description",
+        "section_id": 4,
+        "section_name": "888",
+        "modules": [
+            {
+                "module_id": 1,
+                "module_name": "module"
+            },
+            {
+                "module_id": 2,
+                "module_name": "module"
+            },
+            {
+                "module_id": 3,
+                "module_name": "test moduleeee"
+            }
+        ]
+        }
     """
     try:
-        resp = db.session.query(Sections).filter_by(course_id=course_id, section_id=section_id).first()
+        resp = Sections.get_section(course_id, section_id)
         if resp:
             response_data = {
                 "section_id": resp.section_id,
-                "section_name": resp.section_id,
+                "section_name": resp.section_name,
                 "course_id": resp.course_id,
-                "course_name": resp.course_name,
+                # "course_name": resp.course_name,
+                "description": resp.description,
                 # "professor_id": resp.professor_id
             }
 
             response_data["modules"] = []
             modules_res = db.session.query(Modules).filter_by(section_id=section_id).all()
+            # modules_res = db.session.query(
+            #     Modules.module_id, 
+            #     Modules.module_name, 
+            #     Users.user_id, 
+            #     Users.username, 
+            #     Courses.course_name
+            #     )
 
             for module in modules_res:
                 m = {}
-                m["module_id"] = module.section_id
-                m["module_name"] = module.section_name
+                m["module_id"] = module.module_id
+                m["module_name"] = module.module_name
                 response_data["modules"].append(m)
                 
         return jsonify(response_data), 200
@@ -262,7 +296,7 @@ def get_section(course_id, section_id):
 @app.route("/course/<course_id>/section", methods=["POST"])
 def add_section(course_id):
     """
-    data is expected to be { section_name }
+    data is expected to be { section_name, description }
     returns { course_id, section_id, section_name } upon success
     """
     try:
@@ -272,7 +306,8 @@ def add_section(course_id):
         if Courses.get_course(course_id):
             resp = Sections.add_section(
                 course_id = course_id,
-                section_name = data["section_name"]
+                section_name = data["section_name"],
+                description = data["description"]
             )
 
             db.session.commit()
@@ -280,7 +315,8 @@ def add_section(course_id):
             response_data = {
                 "course_id": resp.course_id,
                 "section_id": resp.section_id,
-                "section_name": resp.section_name
+                "section_name": resp.section_name,
+                "description": resp.description
             }
 
             return jsonify(response_data), 200
@@ -294,7 +330,7 @@ def add_section(course_id):
 @app.route("/course/<course_id>/section/<section_id>", methods=["PATCH"])
 def edit_section(course_id, section_id):
     """
-    data is expected to be { section_name }
+    data is expected to be at least one of { section_name, description }
     """
     try:
         data = request.json

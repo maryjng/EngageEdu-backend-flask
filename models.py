@@ -55,14 +55,14 @@ class Courses(db.Model):
 
 
     @classmethod
-    def add_course(cls, course_name, professor_id):
+    def add_course(cls, course_name, professor_id, description):
         """ First checks if a course by course_name and professor_id exists. If yes, return False. If not, create new course and
         commit to db, then return the new course object.
         """
         course = cls.query.filter_by(course_name=course_name, professor_id=professor_id).one_or_none()
         if course:
             return False
-        new_course = Courses(course_name=course_name, professor_id=professor_id)
+        new_course = Courses(course_name=course_name, professor_id=professor_id, description=description)
         db.session.add(new_course)
 
         return new_course
@@ -99,14 +99,15 @@ class Sections(db.Model):
     @classmethod
     def get_section(cls, course_id, section_id):
         section = cls.query.filter_by(section_id=section_id, course_id=course_id).first()
+        print(section.section_id, section.section_name)
         if section:
             return section
         return False
 
     @classmethod
-    def add_section(cls, section_name, course_id):
+    def add_section(cls, section_name, course_id, description):
         #view already calls Course.get_course() to check if course exists
-        section = Sections(section_name=section_name, course_id=course_id)
+        section = Sections(section_name=section_name, course_id=course_id, description=description)
         db.session.add(section)
 
         return section
