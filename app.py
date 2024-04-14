@@ -45,6 +45,9 @@ def index():
 
 @app.route("/login", methods=["POST"])
 def login():
+    """ Expects data to be { email, password }
+        Returns { user_id, username, email, type }
+    """
     try:
         data = request.json
 
@@ -65,7 +68,7 @@ def login():
         
         else:
             response_data = {"message": "Invalid user or password."}
-            return jsonify(response_data), 401  # Unauthorized status code
+            return jsonify(response_data), 401
 
     except Exception as e:
         print("Exception:", e)
@@ -75,6 +78,10 @@ def login():
 
 @app.route("/register", methods=["POST"])
 def register():
+    """
+    Expects data to be { username, email, password, type }
+    Returns { user_id, username, email, type }
+    """
     try:
         data = request.json
 
@@ -138,7 +145,7 @@ def get_course(course_id):
             response_data = {
                 "course_id": resp.course_id,
                 "course_name": resp.course_name,
-                "user_id": resp.user_idd,
+                "user_id": resp.user_id,
                 "description": resp.description
             }
 
@@ -194,7 +201,9 @@ def add_course():
 
 @app.route("/course/<course_id>", methods=["PATCH"])
 def edit_course(course_id):
-    """ Queries db for course by id. Changes given fields and commits back to db. Errors if course does not exist. Returns the edited course info if successful."""
+    """ 
+    Expects data to have at least one of { course_name, user_id, description }
+    Returns success message upon change."""
     try:
         data = request.json
         course = Courses.query.get_or_404(course_id)
@@ -213,7 +222,7 @@ def edit_course(course_id):
 
 @app.route("/course/<course_id>", methods=["DELETE"])
 def delete_course(course_id):
-    """ Returns True if course was deleted. False if not. """
+    """ Returns success message upon deletion. """
     try:
         response_data = {"message": "Course does not exist."}
         resp = Courses.delete_course(course_id)
@@ -322,6 +331,7 @@ def add_section(course_id):
 def edit_section(course_id, section_id):
     """
     data is expected to be at least one of { section_name, description }
+    Returns success message upon change
     """
     try:
         data = request.json
@@ -343,7 +353,7 @@ def edit_section(course_id, section_id):
 @app.route("/course/<course_id>/section/<section_id>", methods=["DELETE"])
 def delete_section(course_id, section_id):
     """
-    Returns success message upon success.
+    Returns success message upon deletion.
     """
 
     try:
@@ -368,7 +378,6 @@ def delete_section(course_id, section_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["GET"])
 def get_module(course_id, section_id, module_id):
     """
-    Expects { course_id, section_id, module_id }
     Returns {
         "module_id": module_id,
         "module_content": [
@@ -417,7 +426,7 @@ def get_module(course_id, section_id, module_id):
 @app.route("/course/<course_id>/section/<section_id>/module", methods=["POST"])
 def add_module(course_id, section_id):
     """
-    Expects section_name
+    Expects { section_name }
     Returns { course_id, section_id, module_id, module_name } upon success
     """
     try:
@@ -452,7 +461,7 @@ def add_module(course_id, section_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["PATCH"])
 def edit_module(course_id, section_id, module_id):
     """
-    Expects course_id, section_id, module_id
+    Expects { module_name }
     Returns success message upon successful update
     """
     try:
@@ -518,7 +527,7 @@ def get_content(course_id, section_id, module_id, content_id):
 def add_content(course_id, section_id, module_id):
     """
     Expects data { video_name, video_description, youtube_embed_url }
-    Returns 
+    Returns { module_id, video_name, video_description, youtube_embed_url }
     """
     try:
         data = request.json
