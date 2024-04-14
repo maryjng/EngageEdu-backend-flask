@@ -390,6 +390,17 @@ def get_module(course_id, section_id, module_id):
             {
                 ...
             }
+        ],
+
+        "questions": [
+            {
+                "question_id": question_id,
+                "question_text": question_text,
+                "created_by": created_by
+            },
+            {
+                ...
+            }
         ]
     }
     """
@@ -401,7 +412,8 @@ def get_module(course_id, section_id, module_id):
             
             response_data = {
                 "module_id": module_id,
-                "module_content": []
+                "module_content": [],
+                "questions": []
                 }
 
             modules_res = db.session.query(ModuleContents).filter_by(module_id=module_id).all()
@@ -410,10 +422,20 @@ def get_module(course_id, section_id, module_id):
                 m = {}
                 m["content_id"] = module.content_id
                 m["video_name"] = module.video_name
-                m["video_description"] = module.video_descsription
+                m["video_description"] = module.video_description
                 m["youtube_embed_url"] = module.youtube_embed_url
 
-                response_data["modules"].append(m)
+                response_data["module_content"].append(m)
+            
+            questions_res = db.session.query(Questions).filter_by(module_id=module_id).all()
+
+            for question in questions_res:
+                q = {}
+                q["question_id"] = question.question_id
+                q["question_text"] = question.question_text
+                q["created_by"] = question.created_by
+
+                response_data["questions"].append(q)
                 
         return jsonify(response_data), 200
 
@@ -511,12 +533,20 @@ def delete_module(course_id, section_id, module_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>/content/<content_id>", methods=["GET"])
 def get_content(course_id, section_id, module_id, content_id):
     """
-    Expects { course_id, section_id, module_id, content_id }
-    Returns 
+    Returns { content_id, module_id, video_name, video_description, youtube_embed_url } for the content_id
     """
-
     try:
-        pass
+        content = ModuleContents.get_contents(content_id)
+        response_data = {
+            "content_id": content.content_id,
+            "module_id": content.module_id,
+            "video_name": content.video_name,
+            "video_description": content.video_description,
+            "youtube_embed_url": content.youtube_embed_url
+        }
+
+        return jsonify(response_data), 200
+
     except Exception as e:
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
@@ -602,6 +632,47 @@ def delete_content(course_id, section_id, module_id, content_id):
         print("Exception:", e)
         response_data = {"message": "An error occurred."}
         return jsonify(response_data), 500      
+
+
+#######################
+## PROF QUESTIONS VIEWS
+
+# @app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question", methods=["GET"])
+
+@app.route("/course/<course_id>/section/<section_id>/module/<module_id>/question", methods=["POST"])
+def add_question(course_id, section_id, module_id):
+    """
+    Expects data to have { question_text, created_by }, where created_by is a valid user_id
+    Returns { module_id, question_text, created_by }
+    """
+    try:
+        data = request.json
+        response_data = {"message": "Content not found"}
+
+        resp = Questions.add_question(
+            module_id=module_id, 
+            question_text=data["question_text"], 
+            created_by=data["created_by"]
+        )
+
+        db.session.commit()
+
+        response_data = {
+            "module_id": resp.module_id,
+            "question_text": resp.question_text,
+            "created_by": resp.created_by
+        }
+
+        return jsonify(response_data), 200
+            
+    except Exception as e:
+        print("Exception:", e)
+        response_data = {"message": "An error occurred."}
+        return jsonify(response_data), 500
+
+
+
+
 ##
 #######################
 

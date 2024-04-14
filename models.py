@@ -168,11 +168,15 @@ class ModuleContents(db.Model):
     youtube_embed_url = db.Column(db.String(200), nullable=False)
 
     @classmethod
+    def get_contents(cls, content_id):
+        contents = cls.query.filter_by(content_id=content_id).first()
+        return contents
+
+    @classmethod
     def get_module_contents(cls, module_id):
         contents = cls.query.filter_by(module_id=module_id).all()
         return contents
     
-
     @classmethod
     def add_content(cls, module_id, video_name, video_description, youtube_embed_url):
         content = ModuleContents(
@@ -204,6 +208,23 @@ class Questions(db.Model):
     question_text = db.Column(db.Text, nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     professor = db.relationship('Users', foreign_keys=[created_by])
+
+    @classmethod
+    def get_all_questions(cls, course_id, section_id, module_id):
+        questions = cls.query.filter_by(module_id=module_id).all()
+        return questions
+    
+
+    @classmethod
+    def add_question(cls, module_id, question_text, created_by):
+        question = Questions(
+            module_id=module_id, 
+            question_text=question_text, 
+            created_by=created_by
+        )
+        db.session.add(question)
+        return question
+    
 
 
 class Answers(db.Model):
