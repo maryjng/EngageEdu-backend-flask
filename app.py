@@ -237,10 +237,10 @@ def get_section(course_id, section_id):
     """
     Returns example: 
         {
-        "course_id": 5,
-        "description": "description",
         "section_id": 4,
-        "section_name": "888",
+        "section_name": "section_name",
+        "course_id": 3,
+        "description": "description",
         "modules": [
             {
                 "module_id": 1,
@@ -264,20 +264,11 @@ def get_section(course_id, section_id):
                 "section_id": resp.section_id,
                 "section_name": resp.section_name,
                 "course_id": resp.course_id,
-                # "course_name": resp.course_name,
                 "description": resp.description,
-                # "professor_id": resp.professor_id
             }
 
             response_data["modules"] = []
             modules_res = db.session.query(Modules).filter_by(section_id=section_id).all()
-            # modules_res = db.session.query(
-            #     Modules.module_id, 
-            #     Modules.module_name, 
-            #     Users.user_id, 
-            #     Users.username, 
-            #     Courses.course_name
-            #     )
 
             for module in modules_res:
                 m = {}
@@ -377,16 +368,12 @@ def delete_section(course_id, section_id):
 @app.route("/course/<course_id>/section/<section_id>/module/<module_id>", methods=["GET"])
 def get_module(course_id, section_id, module_id):
     """
+    SELECT * FROM module_contents
+    WHERE module_id=module_id;
+
     Expects course_id, section_id, module_id
     Returns {
-        "course_id": course_id,
-        "course_name": course_name,
-        "section_id": section_id,
-        "section_name": section_name,
         "module_id": module_id,
-        "module_name": module_name,
-        "professor_id": professor_id,
-        "professor_name": professor_name,
         "module_content": [
             {
                 "content_id": content_id,
@@ -404,35 +391,18 @@ def get_module(course_id, section_id, module_id):
         resp = Modules.get_module(module_id)
         #NEED TO REPLACE PARAMS WHEN DB IS FIXED
         if resp:
-            data = db.session.query(
-                Users.user_id, 
-                Users.username, 
-                Courses.course_id, 
-                Courses.course_name,
-                Sections.section_id,
-                Sections.section_name,
-                Modules.module_id,
-                Modules.module_name
-                )
+            data = ModuleContents.get_module_contents(module_id)
             
             response_data = {
-                "course_id": data.course_id,
-                "course_name": data.course_name,
-                "section_id": data.section_id,
-                "section_name": data.section_name,
-                "module_id": data.module_id,
-                "module_name": data.module_name,
-                "professor_id": data.professor_id,
-                "professor_name": data.username,
+                "module_id": module_id,
                 "module_content": []
-            }
+                }
 
             modules_res = db.session.query(ModuleContents).filter_by(module_id=module_id).all()
 
             for module in modules_res:
                 m = {}
-                m["module_id"] = module.section_id
-                m["module_name"] = module.section_name
+                m["content_id"] = module.content_id
                 m["video_name"] = module.video_name
                 m["video_description"] = module.video_descsription
                 m["youtube_embed_url"] = module.youtube_embed_url

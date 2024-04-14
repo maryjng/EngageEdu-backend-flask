@@ -147,12 +147,9 @@ class Modules(db.Model):
     
 
     @classmethod
-    def delete_module(cls, course_id, module_id, section_id):
+    def delete_module(cls, course_id, section_id, module_id):
         """ Returns True on successful deletion. False otherwise. """
-        print(cls, course_id, module_id, section_id)
-        # module = cls.query.filter_by(module_id=module_id, section_id=section_id).first()
-        module = cls.query.filter_by(module_id=module_id).first()
-        print(module, "module")
+        module = cls.query.filter_by(module_id=module_id, section_id=section_id).first()
         if module:
             db.session.delete(module)
             db.session.commit()
@@ -169,6 +166,11 @@ class ModuleContents(db.Model):
     video_name = db.Column(db.String(100), nullable=False)
     video_description = db.Column(db.Text, nullable=True)
     youtube_embed_url = db.Column(db.String(200), nullable=False)
+
+    @classmethod
+    def get_module_contents(cls, module_id):
+        contents = cls.query.filter_by(module_id=module_id).all()
+        return contents
 
 
 class Questions(db.Model):
