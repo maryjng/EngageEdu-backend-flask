@@ -19,12 +19,15 @@ class Users(db.Model):
     @classmethod
     def signup(cls, username, email, password, type):
         """Sign up user. Hashes password and adds user to system."""
-
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
-        user = Users(username=username, email=email, password=hashed_pwd, type=type)
-
-        db.session.add(user)
-        return user
+        try:
+            hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+            user = Users(username=username, email=email, password=hashed_pwd, type=type)
+    
+            db.session.add(user)
+            return user
+        except IntegrityError:
+            db.session.rollback()
+            raise
 
 
     @classmethod
@@ -222,6 +225,7 @@ class Questions(db.Model):
     def get_all_questions(cls, course_id, section_id, module_id):
         questions = cls.query.filter_by(module_id=module_id).all()
         return questions
+
     
     @classmethod
     def get_question(cls, question_id):
